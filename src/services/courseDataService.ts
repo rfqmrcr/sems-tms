@@ -1,15 +1,19 @@
 import { Course, CourseRun } from '@/types/course';
-import { getTable, delay } from '@/data/mockDatabase';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export const fetchCourses = async (): Promise<Course[]> => {
-  await delay(300);
-  return getTable('courses') as Course[];
+  const snapshot = await getDocs(collection(db, 'courses'));
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
 };
 
 export const fetchCourseRunsData = async () => {
-  await delay(300);
-  const runs = getTable('course_runs');
-  const courses = getTable('courses');
+  const runsSnap = await getDocs(collection(db, 'course_runs'));
+  const coursesSnap = await getDocs(collection(db, 'courses'));
+  
+  const courses = coursesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+  const runs = runsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseRun));
+  
   return runs.map(run => {
     return {
       ...run,
@@ -20,13 +24,15 @@ export const fetchCourseRunsData = async () => {
 };
 
 export const fetchPublicCourseRunsData = async () => {
-  await delay(300);
   const minDate = new Date();
   minDate.setDate(minDate.getDate() + 2);
   const minDateString = minDate.toISOString().split('T')[0];
   
-  const runs = getTable('course_runs');
-  const courses = getTable('courses');
+  const runsSnap = await getDocs(collection(db, 'course_runs'));
+  const coursesSnap = await getDocs(collection(db, 'courses'));
+  
+  const courses = coursesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+  const runs = runsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseRun));
   
   const publicRuns = runs.filter(run => run.visibility === 'public' && run.start_date >= minDateString);
   
@@ -38,9 +44,12 @@ export const fetchPublicCourseRunsData = async () => {
 };
 
 export const fetchAlternativeCourseRuns = async (courseId: string, excludeId: string): Promise<CourseRun[]> => {
-  await delay(300);
-  const runs = getTable('course_runs');
-  const courses = getTable('courses');
+  const runsSnap = await getDocs(collection(db, 'course_runs'));
+  const coursesSnap = await getDocs(collection(db, 'courses'));
+  
+  const courses = coursesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+  const runs = runsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseRun));
+  
   const alt = runs.filter(run => run.course_id === courseId && run.id !== excludeId && run.visibility === 'public');
   return alt.map(run => ({
     ...run,

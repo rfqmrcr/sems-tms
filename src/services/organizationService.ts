@@ -1,19 +1,27 @@
 import { Organization } from '@/types/course';
-import { getTable, insertRow, delay } from '@/data/mockDatabase';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export const createOrFindOrganization = async (organization: Organization): Promise<string> => {
-  await delay(200);
-  const orgs = getTable('organizations');
-  const existingOrg = orgs.find(o => o.name === organization.name && o.contact_email === organization.contact_email);
-  if (existingOrg) return existingOrg.id;
+  const q = query(
+    collection(db, 'organizations'),
+    where('name', '==', organization.name),
+    where('contact_email', '==', organization.contact_email)
+  );
   
-  const newOrg = insertRow('organizations', {
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    return snapshot.docs[0].id;
+  }
+  
+  const docRef = await addDoc(collection(db, 'organizations'), {
     name: organization.name,
     address: organization.address,
     contact_person: organization.contact_person,
     contact_email: organization.contact_email,
     contact_number: organization.contact_number,
+    created_at: new Date().toISOString()
   });
   
-  return newOrg.id;
+  return docRef.id;
 };

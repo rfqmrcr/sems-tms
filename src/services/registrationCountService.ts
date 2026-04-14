@@ -1,11 +1,15 @@
-import { getTable } from '@/data/mockDatabase';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export const getRegistrationCounts = async (courseRunIds: string[]): Promise<Record<string, number>> => {
   let registrationCounts: Record<string, number> = {};
   if (courseRunIds.length === 0) return registrationCounts;
 
-  const registrations = getTable('registrations');
-  const trainees = getTable('trainees');
+  const regSnap = await getDocs(collection(db, 'registrations'));
+  const registrations = regSnap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+
+  const traineeSnap = await getDocs(collection(db, 'trainees'));
+  const trainees = traineeSnap.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
 
   const filteredRegs = registrations.filter(r => courseRunIds.includes(r.course_run_id));
   const registrationIds = filteredRegs.map(r => r.id);

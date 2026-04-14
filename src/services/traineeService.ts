@@ -1,8 +1,8 @@
 import { Trainee } from '@/types/course';
-import { insertRow, delay } from '@/data/mockDatabase';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export const createTrainees = async (trainees: Trainee[], registrationId: string): Promise<void> => {
-  await delay(200);
   if (!trainees || trainees.length === 0) return;
 
   const traineesToInsert = trainees.map(trainee => {
@@ -26,9 +26,10 @@ export const createTrainees = async (trainees: Trainee[], registrationId: string
       dob: formattedDob,
       gender: trainee.gender || 'male',
       contact_number: trainee.contact_number || '',
-      email: trainee.email || ''
+      email: trainee.email || '',
+      created_at: new Date().toISOString()
     };
   });
 
-  traineesToInsert.forEach(t => insertRow('trainees', t));
+  await Promise.all(traineesToInsert.map(t => addDoc(collection(db, 'trainees'), t)));
 };

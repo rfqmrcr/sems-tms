@@ -1,0 +1,74 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if user is signed in
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ====================
+    // COURSES (public read, admin write)
+    // ====================
+    match /courses/{courseId} {
+      allow read: if true;  // Public can view courses
+      allow write: if isAuthenticated();  // Only logged-in admins can modify
+    }
+
+    match /course_runs/{runId} {
+      allow read: if true;  // Public can view course schedules
+      allow write: if isAuthenticated();
+    }
+
+    // ====================
+    // REGISTRATIONS (authenticated only)
+    // ====================
+    match /registrations/{registrationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ====================
+    // TRAINEES (authenticated only)
+    // ====================
+    match /trainees/{traineeId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ====================
+    // ORGANIZATIONS (authenticated only)
+    // ====================
+    match /organizations/{orgId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ====================
+    // INVOICES (authenticated only)
+    // ====================
+    match /invoices/{invoiceId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ====================
+    // QUOTATIONS (authenticated only)
+    // ====================
+    match /quotations/{quotationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ====================
+    // PROMO CODES (public read for validation, admin write)
+    // ====================
+    match /promo_codes/{codeId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // ====================
+    // PARTNERS (authenticated only)
+    // ====================
+    match /partners/{partnerId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

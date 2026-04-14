@@ -1,5 +1,6 @@
 import { addDays, format } from 'date-fns';
-import { getTable, insertRow, updateRow, deleteRow, delay } from '@/data/mockDatabase';
+import { collection, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export interface Invoice {
   id: string;
@@ -39,10 +40,9 @@ export const createInvoiceForRegistration = async (
   description?: string,
   dueInDays: number = 14
 ): Promise<Invoice> => {
-  await delay(200);
-  const registrations = getTable('registrations');
-  const registration = registrations.find(r => r.id === registrationId);
-  if (!registration) throw new Error('Registration not found');
+  const regDoc = await getDoc(doc(db, 'registrations', registrationId));
+  if (!regDoc.exists()) throw new Error('Registration not found');
+  const registration = regDoc.data();
 
   const subtotal = registration.payment_amount || 0;
   const taxSetting = getDefaultTaxSetting();
@@ -56,7 +56,7 @@ export const createInvoiceForRegistration = async (
 
   let invoiceDescription = description || 'Invoice for course registration';
 
-  const newInvoice = insertRow('invoices', {
+  const invoiceData = {
     registration_id: registrationId,
     invoice_number: invoiceNumber,
     issue_date: issueDate,
@@ -66,19 +66,21 @@ export const createInvoiceForRegistration = async (
     tax_amount: taxAmount,
     total_amount: totalAmount,
     status: 'pending',
-    description: invoiceDescription
-  });
+    description: invoiceDescription,
+    created_at: new Date().toISOString()
+  };
 
-  return newInvoice as Invoice;
+  const docRef = await addDoc(collection(db, 'invoices'), invoiceData);
+
+  return { id: docRef.id, ...invoiceData } as Invoice;
 };
 
 export const updateInvoice = async (invoiceId: string, data: Partial<Invoice>) => {
-  await delay(200);
-  return updateRow('invoices', invoiceId, data);
+  await updateDoc(doc(db, 'invoices', invoiceId), data as any);
+  return { id: invoiceId, ...data };
 };
 
 export const deleteInvoice = async (invoiceId: string) => {
-  await delay(200);
-  deleteRow('invoices', invoiceId);
+  await deleteDoc(doc(db, 'invoices', invoiceId));
   return true;
 };

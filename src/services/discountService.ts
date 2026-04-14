@@ -1,5 +1,4 @@
 import { DiscountCalculation } from "@/types/discount";
-import { delay } from '@/data/mockDatabase';
 
 export interface PromoCodeValidation {
   isValid: boolean;
@@ -12,12 +11,10 @@ export const validatePromoCode = async (
   courseVisibility: string = 'public',
   sponsorshipType?: string
 ): Promise<PromoCodeValidation> => {
-  await delay(100);
   return { isValid: false, discountPercentage: 0, errorMessage: 'Promo codes disabled in mock mode' };
 };
 
 export const getPartnerDiscount = async (organizationName: string, courseVisibility: string = 'public'): Promise<number> => {
-  await delay(100);
   return 0;
 };
 
@@ -29,7 +26,6 @@ export const calculateDiscounts = async (
   promoCode?: string,
   sponsorshipType?: string
 ): Promise<DiscountCalculation> => {
-  await delay(100);
   const perTraineeAmount = originalAmount / traineeCount;
   const finalAmount = originalAmount;
   return {
@@ -43,5 +39,5 @@ export const calculateDiscounts = async (
 };
 
 export const incrementPromoCodeUsage = async (code: string): Promise<void> => {
-  await delay(100);
+  // Not implemented in mock mode
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getTable, delay } from '@/data/mockDatabase';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { toast } from '@/hooks/use-toast';
 
 export interface Registration {
@@ -39,13 +40,20 @@ export const useDashboardData = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      await delay(300);
       
-      const allRegs = getTable('registrations');
-      const allOrgs = getTable('organizations');
-      const allTrainees = getTable('trainees');
-      const allCourses = getTable('courses');
-      const allCourseRuns = getTable('course_runs');
+      const [regsSnap, orgsSnap, traineesSnap, coursesSnap, runsSnap] = await Promise.all([
+        getDocs(collection(db, 'registrations')),
+        getDocs(collection(db, 'organizations')),
+        getDocs(collection(db, 'trainees')),
+        getDocs(collection(db, 'courses')),
+        getDocs(collection(db, 'course_runs'))
+      ]);
+
+      const allRegs = regsSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+      const allOrgs = orgsSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+      const allTrainees = traineesSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+      const allCourses = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+      const allCourseRuns = runsSnap.docs.map(d => ({ id: d.id, ...d.data() as any }));
 
       let totalRevenue = 0;
       let totalPaymentDue = 0;

@@ -4,7 +4,8 @@ import { getRegistrationCounts } from './registrationCountService';
 import { enrichCourseRunsWithCapacity } from './courseRunProcessor';
 import { createOrFindOrganization } from './organizationService';
 import { createTrainees } from './traineeService';
-import { insertRow, delay } from '@/data/mockDatabase';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export interface Organization {
   name: string;
@@ -36,7 +37,6 @@ export const createRegistration = async (
   trainees: Trainee[]
 ): Promise<{ success: boolean; error?: string; registrationId?: string }> => {
   try {
-    await delay(300);
     const organizationId = await createOrFindOrganization(organization);
 
     const registrationData = {
@@ -50,15 +50,17 @@ export const createRegistration = async (
       hrdf_grant: registration.hrdf_grant || false,
       payment_status: 'unpaid',
       status: 'pending',
+      created_at: new Date().toISOString()
     };
 
-    const newRegistration = insertRow('registrations', registrationData);
+    const docRef = await addDoc(collection(db, 'registrations'), registrationData);
+    const newRegistrationId = docRef.id;
 
-    await createTrainees(trainees, newRegistration.id);
+    await createTrainees(trainees, newRegistrationId);
 
     return { 
       success: true, 
-      registrationId: newRegistration.id 
+      registrationId: newRegistrationId 
     };
 
   } catch (error) {
