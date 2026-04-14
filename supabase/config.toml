@@ -1,0 +1,22 @@
+project_id = "fgmpgyigalemroggekzd"
+
+[functions.create-admin]
+verify_jwt = false
+
+[functions.admin-delete-course]
+verify_jwt = true
+
+[functions.stripe-create-checkout]
+verify_jwt = false
+
+[functions.create-payment-link]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.create-trainer-account]
+verify_jwt = true
+
+[functions.send-private-session-request]
+verify_jwt = false
